@@ -1,49 +1,17 @@
+# app.py
 import streamlit as st
-from authlib.integrations.requests_client import OAuth2Session
-import os
-from urllib.parse import urlencode
+import auth  # your auth module
 
-# Load secrets from Streamlit secrets manager
-client_id = st.secrets["client_id"]
-client_secret = st.secrets["client_secret"]
-redirect_uri = st.secrets["redirect_uri"]
+st.set_page_config(page_title="Dr Cartoon", page_icon="📺")
 
-authorization_endpoint = "https://accounts.google.com/o/oauth2/v2/auth"
-token_endpoint = "https://oauth2.googleapis.com/token"
-userinfo_endpoint = "https://openidconnect.googleapis.com/v1/userinfo"
+# Protect the app
+auth.require_login()
 
-if "user" not in st.session_state:
-    st.session_state.user = None
+# If user is logged in
+st.success(f"Welcome {st.session_state.user['email']}")
+st.image(st.session_state.user["picture"], width=100)
+st.write("User info:")
+st.json(st.session_state.user)
 
-def handle_callback():
-    params = st.query_params.to_dict()
-    if "code" in params:
-        client = OAuth2Session(client_id, client_secret, redirect_uri=redirect_uri)
-        try:
-            token = client.fetch_token(token_endpoint, code=params["code"])
-            client.token = token
-            userinfo = client.get(userinfo_endpoint).json()
-            st.session_state.user = userinfo
-        except Exception as e:
-            st.error(f"OAuth error: {e}")
-            st.stop()
-
-def login():
-    auth_url = authorization_endpoint + "?" + urlencode({
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "response_type": "code",
-        "scope": "openid email profile",
-        "access_type": "offline",
-        "prompt": "consent"
-    })
-    st.markdown(f"[Click here to login with Google]({auth_url})")
-
-st.title("🔐 Google Login Example")
-
-if st.session_state.user:
-    st.success(f"Welcome {st.session_state.user['email']}")
-    st.json(st.session_state.user)
-else:
-    handle_callback()
-    login()
+# Your actual app logic here
+st.write("🎉 This is your secure app content.")
