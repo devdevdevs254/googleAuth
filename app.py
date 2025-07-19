@@ -19,10 +19,14 @@ def handle_callback():
     params = st.query_params.to_dict()
     if "code" in params:
         client = OAuth2Session(client_id, client_secret, redirect_uri=redirect_uri)
-        token = client.fetch_token(token_endpoint, code=params["code"])
-        client.token = token  # ✅ set the token before making requests
-        userinfo = client.get(userinfo_endpoint).json()
-        st.session_state.user = userinfo
+        try:
+            token = client.fetch_token(token_endpoint, code=params["code"])
+            client.token = token
+            userinfo = client.get(userinfo_endpoint).json()
+            st.session_state.user = userinfo
+        except Exception as e:
+            st.error(f"OAuth error: {e}")
+            st.stop()
 
 def login():
     auth_url = authorization_endpoint + "?" + urlencode({
