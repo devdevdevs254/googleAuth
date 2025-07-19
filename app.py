@@ -20,7 +20,8 @@ def handle_callback():
     if "code" in params:
         client = OAuth2Session(client_id, client_secret, redirect_uri=redirect_uri)
         token = client.fetch_token(token_endpoint, code=params["code"])
-        userinfo = client.get(userinfo_endpoint, token=token).json()
+        client.token = token  # ✅ set the token before making requests
+        userinfo = client.get(userinfo_endpoint).json()
         st.session_state.user = userinfo
 
 def login():
